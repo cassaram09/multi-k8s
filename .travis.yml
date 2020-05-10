@@ -1,0 +1,26 @@
+sudo: required
+language: generic
+
+services:
+  - docker
+
+before_install:
+  - docker build -t cassaram09/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true cassaram09/react-test npm test
+
+after_success:
+  - docker build -t cassaram09/multi-client -f ./client
+  - docker build -t cassaram09/multi-nginx -f ./nginx
+  - docker build -t cassaram09/multi-server -f ./server
+  - docker build -t cassaram09/multi-worker -f ./worker
+
+  #login to docker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+  # push to docker hub
+  - docker push cassaram09/multi-client
+  - docker push cassaram09/multi-nginx
+  - docker push cassaram09/multi-server
+  - docker push cassaram09/multi-worker
